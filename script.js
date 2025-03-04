@@ -20,6 +20,41 @@ function drawBackground() {
     ctx.fillRect(150, 0, 100, canvas.height);
 }
 
+// Player Character
+const player = {
+    x: 180, // Starting position (on the path)
+    y: 300,
+    width: 40,
+    height: 50,
+    color: "#f2dc9d", // Gold color
+    speed: 3
+};
+
+// Function to draw the player character
+function drawPlayer() {
+    // Body
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+
+    // Head
+    ctx.fillStyle = "#f2dc9d"; // Gold color
+    ctx.beginPath();
+    ctx.arc(player.x + 20, player.y - 10, 15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(player.x + 13, player.y - 12, 3, 0, Math.PI * 2);
+    ctx.arc(player.x + 27, player.y - 12, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Legs
+    ctx.fillStyle = "#000";
+    ctx.fillRect(player.x + 5, player.y + 50, 10, 10);
+    ctx.fillRect(player.x + 25, player.y + 50, 10, 10);
+}
+
 // Draw NPC on the canvas
 function drawNPC() {
     ctx.fillStyle = "blue";
@@ -31,6 +66,45 @@ function drawNPC() {
 // Player Data
 let score = 0;
 let currentDialogue;
+
+// Player Movement
+const keys = {
+    left: false,
+    right: false,
+    up: false,
+    down: false
+};
+
+// Event Listeners for Key Presses
+window.addEventListener("keydown", (event) => {
+    if (event.key === "a") keys.left = true;
+    if (event.key === "d") keys.right = true;
+    if (event.key === "w") keys.up = true;
+    if (event.key === "s") keys.down = true;
+});
+
+window.addEventListener("keyup", (event) => {
+    if (event.key === "a") keys.left = false;
+    if (event.key === "d") keys.right = false;
+    if (event.key === "w") keys.up = false;
+    if (event.key === "s") keys.down = false;
+});
+
+// Function to update player movement
+function updatePlayer() {
+    if (keys.left && player.x > 0) {
+        player.x -= player.speed;
+    }
+    if (keys.right && player.x + player.width < canvas.width) {
+        player.x += player.speed;
+    }
+    if (keys.up && player.y > 0) {
+        player.y -= player.speed;
+    }
+    if (keys.down && player.y + player.height < canvas.height) {
+        player.y += player.speed;
+    }
+}
 //==============================================================================
 /*  CODE FOR THE NPCS */
 
@@ -42,7 +116,7 @@ const dialogues = [
     { npc: "ありがとう", answer: "Thank you" }
 ];
 //==============================================================================
-/*  GAME FUNCTIONS */
+/*  GAME CONTROL FUNCTIONS */
 
 // Function to start a new translation challenge
 function startDialogue() {
@@ -72,6 +146,8 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
     drawNPC();
+    drawPlayer();
+    updatePlayer();
     requestAnimationFrame(gameLoop);
 }
 
