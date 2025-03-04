@@ -2,8 +2,37 @@
 // Set up the game canvas
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 400;
-canvas.height = 400;
+canvas.width = 500;
+canvas.height = 500;
+//==============================================================================
+
+/*  ALL DRAWING CODE WILL BE HERE 
+    Seperating the functions to make it easier to manage */
+
+// Function to draw the background
+function drawBackground() {
+    // Draw grass (green background)
+    ctx.fillStyle = "#4CAF50"; // Green
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw dirt path
+    ctx.fillStyle = "#8B4513"; // Brown
+    ctx.fillRect(150, 0, 100, canvas.height);
+}
+
+// Draw NPC on the canvas
+function drawNPC() {
+    ctx.fillStyle = "blue";
+    ctx.fillRect(150, 150, 50, 50); // Simple blue square as NPC
+}
+//==============================================================================
+/*  CODE FOR THE PLAYER */
+
+// Player Data
+let score = 0;
+let currentDialogue;
+//==============================================================================
+/*  CODE FOR THE NPCS */
 
 // NPC Dialogue Data
 const dialogues = [
@@ -12,10 +41,8 @@ const dialogues = [
     { npc: "Guten Morgen", answer: "Good morning" },
     { npc: "ありがとう", answer: "Thank you" }
 ];
-
-// Player Data
-let score = 0;
-let currentDialogue;
+//==============================================================================
+/*  GAME FUNCTIONS */
 
 // Function to start a new translation challenge
 function startDialogue() {
@@ -40,15 +67,10 @@ document.getElementById("checkAnswer").addEventListener("click", () => {
     startDialogue();
 });
 
-// Draw NPC on the canvas
-function drawNPC() {
-    ctx.fillStyle = "blue";
-    ctx.fillRect(150, 150, 50, 50); // Simple blue square as NPC
-}
-
 // Game Loop
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackground();
     drawNPC();
     requestAnimationFrame(gameLoop);
 }

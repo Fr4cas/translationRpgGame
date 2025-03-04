@@ -9,10 +9,10 @@ h1 {
 }
 
 canvas {
-    background: #ccc;
     display: block;
     margin: 10px auto;
     border: 2px solid black;
+    background: #87CEEB;
 }
 
 #dialogueBox {
