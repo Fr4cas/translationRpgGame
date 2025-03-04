@@ -1,0 +1,42 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    color: #333;
+}
+
+canvas {
+    background: #ccc;
+    display: block;
+    margin: 10px auto;
+    border: 2px solid black;
+}
+
+#dialogueBox {
+    width: 60%;
+    margin: 20px auto;
+    padding: 10px;
+    border: 2px solid black;
+    background: white;
+}
+
+input {
+    padding: 10px;
+    width: 60%;
+    margin: 10px;
+}
+
+button {
+    padding: 10px;
+    background-color: blue;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: darkblue;
+}
