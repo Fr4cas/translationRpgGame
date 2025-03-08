@@ -25,7 +25,7 @@ const player = {
     x: 180, // Starting position (on the path)
     y: 300,
     width: 40,
-    height: 50,
+    height: 30,
     color: "#f2dc9d", // Gold color
     speed: 3
 };
@@ -34,12 +34,22 @@ const player = {
 function drawPlayer() {
     // Body
     ctx.fillStyle = player.color;
-    ctx.fillRect(player.x, player.y, player.width, player.height);
+    ctx.fillRect(player.x - 5, player.y, player.width + 10, player.height);
 
     // Head
-    ctx.fillStyle = "#f2dc9d"; // Gold color
+    ctx.fillStyle = player.color;
     ctx.beginPath();
-    ctx.arc(player.x + 20, player.y - 10, 15, 0, Math.PI * 2);
+    ctx.fillRect(player.x, player.y - 20, player.width, player.height);
+    ctx.fill();
+    
+    // Clothes
+    ctx.fillStyle = "#23B8A6";
+    ctx.fillRect(player.x , player.y, player.width, player.height);
+
+    // Hair
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.fillRect(player.x, player.y - 25, player.width, 5);
     ctx.fill();
 
     // Eyes
@@ -49,10 +59,12 @@ function drawPlayer() {
     ctx.arc(player.x + 27, player.y - 12, 3, 0, Math.PI * 2);
     ctx.fill();
 
+    
+
     // Legs
-    ctx.fillStyle = "#000";
-    ctx.fillRect(player.x + 5, player.y + 50, 10, 10);
-    ctx.fillRect(player.x + 25, player.y + 50, 10, 10);
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x , player.y + 30, 10, 10);
+    ctx.fillRect(player.x + 28, player.y + 30, 10, 10);
 }
 
 // Draw NPC on the canvas
