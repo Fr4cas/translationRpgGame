@@ -4,21 +4,9 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = 500;
 canvas.height = 500;
+
 //==============================================================================
-
-/*  ALL DRAWING CODE WILL BE HERE 
-    Seperating the functions to make it easier to manage */
-
-// Function to draw the background
-function drawBackground() {
-    // Draw grass (green background)
-    ctx.fillStyle = "#4CAF50"; // Green
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw dirt path
-    ctx.fillStyle = "#8B4513"; // Brown
-    ctx.fillRect(150, 0, 100, canvas.height);
-}
+/*  Declaration of Classes*/
 
 // Player Character
 const player = {
@@ -26,9 +14,41 @@ const player = {
     y: 300,
     width: 40,
     height: 30,
-    color: "#f2dc9d", // Gold color
+    color: "#f2dc9d",
     speed: 3
 };
+
+// NPC
+const npc = {
+    x: 200,
+    y: 150,
+    width: 30,
+    height: 40,
+    color: "blue",
+    dialogues: [
+        { npc: "Hola, ¿cómo estás?", answer: "Hello, how are you?" },
+        { npc: "Merci beaucoup", answer: "Thank you very much" },
+        { npc: "Guten Morgen", answer: "Good morning" },
+        { npc: "ありがとう", answer: "Thank you" }
+    ],
+    currentDialogue: "",
+    correctAnswer: "",
+    showDialogue: false
+};
+
+//==============================================================================
+/*  ALL DRAWING CODE WILL BE HERE */
+
+// Drawing the background
+function drawBackground() {
+    // Draw grass (green background)
+    ctx.fillStyle = "#4CAF50";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw dirt path
+    ctx.fillStyle = "#8B4513"; // Brown
+    ctx.fillRect(150, 0, 100, canvas.height);
+}
 
 // Function to draw the player character
 function drawPlayer() {
@@ -38,19 +58,15 @@ function drawPlayer() {
 
     // Head
     ctx.fillStyle = player.color;
-    ctx.beginPath();
     ctx.fillRect(player.x, player.y - 20, player.width, player.height);
-    ctx.fill();
-    
+
     // Clothes
     ctx.fillStyle = "#23B8A6";
-    ctx.fillRect(player.x , player.y, player.width, player.height);
+    ctx.fillRect(player.x, player.y, player.width, player.height);
 
     // Hair
     ctx.fillStyle = "#000";
-    ctx.beginPath();
     ctx.fillRect(player.x, player.y - 25, player.width, 5);
-    ctx.fill();
 
     // Eyes
     ctx.fillStyle = "#000";
@@ -59,25 +75,20 @@ function drawPlayer() {
     ctx.arc(player.x + 27, player.y - 12, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    
-
     // Legs
     ctx.fillStyle = player.color;
-    ctx.fillRect(player.x , player.y + 30, 10, 10);
+    ctx.fillRect(player.x, player.y + 30, 10, 10);
     ctx.fillRect(player.x + 28, player.y + 30, 10, 10);
 }
 
-// Draw NPC on the canvas
+// Function to draw NPC
 function drawNPC() {
-    ctx.fillStyle = "blue";
-    ctx.fillRect(150, 150, 50, 50); // Simple blue square as NPC
+    ctx.fillStyle = npc.color;
+    ctx.fillRect(npc.x, npc.y, npc.width, npc.height);
 }
+
 //==============================================================================
 /*  CODE FOR THE PLAYER */
-
-// Player Data
-let score = 0;
-let currentDialogue;
 
 // Player Movement
 const keys = {
@@ -87,12 +98,27 @@ const keys = {
     down: false
 };
 
+// Track if player is typing
+let isTyping = false;
+
+// Detect when player starts typing to disable movement
+document.getElementById("translationInput").addEventListener("focus", () => {
+    isTyping = true;
+});
+
+// Detect when typing finishes to re-enable movement
+document.getElementById("translationInput").addEventListener("blur", () => {
+    isTyping = false;
+});
+
 // Event Listeners for Key Presses
 window.addEventListener("keydown", (event) => {
+    if (isTyping) return; 
     if (event.key === "a") keys.left = true;
     if (event.key === "d") keys.right = true;
     if (event.key === "w") keys.up = true;
     if (event.key === "s") keys.down = true;
+    if (event.key === "e") interactWithNPC(); // Press E to talk to NPC
 });
 
 window.addEventListener("keyup", (event) => {
@@ -104,6 +130,8 @@ window.addEventListener("keyup", (event) => {
 
 // Function to update player movement
 function updatePlayer() {
+    if (isTyping) return;
+    
     if (keys.left && player.x > 0) {
         player.x -= player.speed;
     }
@@ -116,42 +144,73 @@ function updatePlayer() {
     if (keys.down && player.y + player.height < canvas.height) {
         player.y += player.speed;
     }
-}
-//==============================================================================
-/*  CODE FOR THE NPCS */
 
-// NPC Dialogue Data
-const dialogues = [
-    { npc: "Hola, ¿cómo estás?", answer: "Hello, how are you?" },
-    { npc: "Merci beaucoup", answer: "Thank you very much" },
-    { npc: "Guten Morgen", answer: "Good morning" },
-    { npc: "ありがとう", answer: "Thank you" }
-];
+    // Hides dialogue when player moves away
+    if (!isPlayerNearNPC()) {
+        npc.showDialogue = false;
+        hideTranslationUI();
+    }
+}
+
 //==============================================================================
 /*  GAME CONTROL FUNCTIONS */
 
-// Function to start a new translation challenge
-function startDialogue() {
-    let randomIndex = Math.floor(Math.random() * dialogues.length);
-    currentDialogue = dialogues[randomIndex];
-    document.getElementById("npcText").innerText = `NPC says: ${currentDialogue.npc}`;
+// Function to check if the player is near the NPC
+function isPlayerNearNPC() {
+    let distance = Math.sqrt(
+        (player.x - npc.x) ** 2 + (player.y - npc.y) ** 2
+    );
+    return distance < 40; // Interaction range
 }
 
-// Check the player's answer
-document.getElementById("checkAnswer").addEventListener("click", () => {
-    let playerInput = document.getElementById("playerInput").value;
-
-    if (playerInput.toLowerCase().trim() === currentDialogue.answer.toLowerCase().trim()) {
-        score += 10;
-        document.getElementById("score").innerText = score;
-        alert("✅ Correct! You earned 10 points!");
-    } else {
-        alert(`❌ Wrong! The correct answer was: ${currentDialogue.answer}`);
+// Function to handle NPC interaction
+function interactWithNPC() {
+    if (isPlayerNearNPC()) {
+        let randomIndex = Math.floor(Math.random() * npc.dialogues.length);
+        npc.currentDialogue = npc.dialogues[randomIndex].npc;
+        npc.correctAnswer = npc.dialogues[randomIndex].answer;
+        npc.showDialogue = true;
+        showTranslationUI();
     }
+}
 
-    document.getElementById("playerInput").value = "";
-    startDialogue();
-});
+// Function to draw dialogue box with translation challenge
+function drawDialogue() {
+    if (npc.showDialogue) {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.fillRect(50, 350, 400, 100);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "16px Arial";
+        ctx.fillText("NPC says: " + npc.currentDialogue, 70, 370);
+        ctx.fillText("Translate:", 70, 390);
+    }
+}
+
+// Show translation UI (input box & button)
+function showTranslationUI() {
+    document.getElementById("translationInput").style.display = "block";
+    document.getElementById("checkTranslation").style.display = "block";
+}
+
+// Hide translation UI
+function hideTranslationUI() {
+    document.getElementById("translationInput").style.display = "none";
+    document.getElementById("checkTranslation").style.display = "none";
+}
+
+// Function to check player's translation
+function checkTranslation() {
+    let playerInput = document.getElementById("translationInput").value.trim().toLowerCase();
+    if (playerInput === npc.correctAnswer.toLowerCase()) {
+        alert(" Correct! You earned 10 points!");
+    } else {
+        alert(` Wrong! The correct answer was: ${npc.correctAnswer}`);
+    }
+    document.getElementById("translationInput").value = "";
+    npc.showDialogue = false; // Hide dialogue after checking
+    hideTranslationUI();
+}
 
 // Game Loop
 function gameLoop() {
@@ -160,9 +219,9 @@ function gameLoop() {
     drawNPC();
     drawPlayer();
     updatePlayer();
+    drawDialogue();
     requestAnimationFrame(gameLoop);
 }
 
 // Start game
-startDialogue();
 gameLoop();
