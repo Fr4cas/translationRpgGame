@@ -1,12 +1,12 @@
 
-// Set up the game canvas
+// Set up for the game canvas
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = 500;
 canvas.height = 500;
 
 //==============================================================================
-/*  Declaration of Classes*/
+/*  Declaration of Objects */
 
 // Player Character
 const player = {
@@ -18,8 +18,8 @@ const player = {
     speed: 3
 };
 
-// NPC
-const npc = {
+// Translation NPC (Has Challenges)
+const translationNPC = {
     x: 200,
     y: 150,
     width: 30,
@@ -35,6 +35,23 @@ const npc = {
     correctAnswer: "",
     showDialogue: false
 };
+
+// Player Movement
+const keys = {
+    left: false,
+    right: false,
+    up: false,
+    down: false
+};
+
+//==============================================================================
+/*  Variables declarations */
+
+// Track active NPC (which NPC the player is talking to)
+let activeNPC = null;
+
+// Track if player is typing
+let isTyping = false;
 
 //==============================================================================
 /*  ALL DRAWING CODE WILL BE HERE */
@@ -83,23 +100,11 @@ function drawPlayer() {
 
 // Function to draw NPC
 function drawNPC() {
-    ctx.fillStyle = npc.color;
-    ctx.fillRect(npc.x, npc.y, npc.width, npc.height);
+    ctx.fillStyle = translationNPC.color;
+    ctx.fillRect(translationNPC.x, translationNPC.y, translationNPC.width, translationNPC.height);
 }
 
 //==============================================================================
-/*  CODE FOR THE PLAYER */
-
-// Player Movement
-const keys = {
-    left: false,
-    right: false,
-    up: false,
-    down: false
-};
-
-// Track if player is typing
-let isTyping = false;
 
 // Detect when player starts typing to disable movement
 document.getElementById("translationInput").addEventListener("focus", () => {
@@ -111,7 +116,7 @@ document.getElementById("translationInput").addEventListener("blur", () => {
     isTyping = false;
 });
 
-// Event Listeners for Key Presses
+/* Event Listeners */
 window.addEventListener("keydown", (event) => {
     if (isTyping) return; 
     if (event.key === "a") keys.left = true;
@@ -127,11 +132,12 @@ window.addEventListener("keyup", (event) => {
     if (event.key === "w") keys.up = false;
     if (event.key === "s") keys.down = false;
 });
+    //==============================================================================
 
 // Function to update player movement
 function updatePlayer() {
     if (isTyping) return;
-    
+
     if (keys.left && player.x > 0) {
         player.x -= player.speed;
     }
@@ -147,7 +153,7 @@ function updatePlayer() {
 
     // Hides dialogue when player moves away
     if (!isPlayerNearNPC()) {
-        npc.showDialogue = false;
+        translationNPC.showDialogue = false;
         hideTranslationUI();
     }
 }
@@ -158,7 +164,7 @@ function updatePlayer() {
 // Function to check if the player is near the NPC
 function isPlayerNearNPC() {
     let distance = Math.sqrt(
-        (player.x - npc.x) ** 2 + (player.y - npc.y) ** 2
+        (player.x - translationNPC.x) ** 2 + (player.y - translationNPC.y) ** 2
     );
     return distance < 40; // Interaction range
 }
@@ -166,23 +172,24 @@ function isPlayerNearNPC() {
 // Function to handle NPC interaction
 function interactWithNPC() {
     if (isPlayerNearNPC()) {
-        let randomIndex = Math.floor(Math.random() * npc.dialogues.length);
-        npc.currentDialogue = npc.dialogues[randomIndex].npc;
-        npc.correctAnswer = npc.dialogues[randomIndex].answer;
-        npc.showDialogue = true;
+        let randomIndex = Math.floor(Math.random() * translationNPC.dialogues.length);
+        translationNPC.currentDialogue = translationNPC.dialogues[randomIndex].npc;
+        translationNPC.correctAnswer = translationNPC.dialogues[randomIndex].answer;
+        translationNPC.showDialogue = true;
         showTranslationUI();
     }
 }
 
+    //==============================================================================
 // Function to draw dialogue box with translation challenge
 function drawDialogue() {
-    if (npc.showDialogue) {
+    if (translationNPC.showDialogue) {
         ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
         ctx.fillRect(50, 350, 400, 100);
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "16px Arial";
-        ctx.fillText("NPC says: " + npc.currentDialogue, 70, 370);
+        ctx.fillText("NPC says: " + translationNPC.currentDialogue, 70, 370);
         ctx.fillText("Translate:", 70, 390);
     }
 }
@@ -202,15 +209,16 @@ function hideTranslationUI() {
 // Function to check player's translation
 function checkTranslation() {
     let playerInput = document.getElementById("translationInput").value.trim().toLowerCase();
-    if (playerInput === npc.correctAnswer.toLowerCase()) {
+    if (playerInput === translationNPC.correctAnswer.toLowerCase()) {
         alert(" Correct! You earned 10 points!");
     } else {
-        alert(` Wrong! The correct answer was: ${npc.correctAnswer}`);
+        alert(` Wrong! The correct answer was: ${translationNPC.correctAnswer}`);
     }
     document.getElementById("translationInput").value = "";
-    npc.showDialogue = false; // Hide dialogue after checking
+    translationNPC.showDialogue = false; // Hide dialogue after checking
     hideTranslationUI();
 }
+    //==============================================================================
 
 // Game Loop
 function gameLoop() {
