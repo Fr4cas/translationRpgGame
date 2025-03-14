@@ -18,6 +18,14 @@ const player = {
     speed: 3
 };
 
+// Player Movement
+const keys = {
+    left: false,
+    right: false,
+    up: false,
+    down: false
+};
+
 // Translation NPC (Has Challenges)
 const translationNPC = {
     x: 200,
@@ -36,12 +44,19 @@ const translationNPC = {
     showDialogue: false
 };
 
-// Player Movement
-const keys = {
-    left: false,
-    right: false,
-    up: false,
-    down: false
+const instructionBoard = {
+    x: 20,
+    y: 300,
+    width: 100,
+    height: 30,
+    color: "brown",
+    text: "INSTRUCTIONS", // Sign title
+    instructions: [
+        "Use W, A, S, D to move.",
+        "Press E near a blue NPC to translate.",
+        "Type the correct translation and press Check.",
+    ],
+    showInstructions: false
 };
 
 //==============================================================================
@@ -104,6 +119,17 @@ function drawNPC() {
     ctx.fillRect(translationNPC.x, translationNPC.y, translationNPC.width, translationNPC.height);
 }
 
+// Function to draw the Instruction Board
+function drawInstructionBoard() {
+    ctx.fillStyle = instructionBoard.color;
+    ctx.fillRect(instructionBoard.x, instructionBoard.y, instructionBoard.width, instructionBoard.height);
+
+    // Draw text on the board
+    ctx.fillStyle = "#fff";
+    ctx.font = "12px Arial";
+    ctx.fillText(instructionBoard.text, instructionBoard.x + 5, instructionBoard.y + 20);
+}
+
 //==============================================================================
 
 // Detect when player starts typing to disable movement
@@ -123,7 +149,9 @@ window.addEventListener("keydown", (event) => {
     if (event.key === "d") keys.right = true;
     if (event.key === "w") keys.up = true;
     if (event.key === "s") keys.down = true;
-    if (event.key === "e") interactWithNPC(); // Press E to talk to NPC
+    if (event.key === "e") {
+        interactWithNPC(); // Press E to talk to NPC
+    }
 });
 
 window.addEventListener("keyup", (event) => {
@@ -134,7 +162,7 @@ window.addEventListener("keyup", (event) => {
 });
     //==============================================================================
 
-// Function to update player movement
+// Function to update player while the game is running
 function updatePlayer() {
     if (isTyping) return;
 
@@ -156,6 +184,13 @@ function updatePlayer() {
         translationNPC.showDialogue = false;
         hideTranslationUI();
     }
+
+    // Hide instructions when player moves away from the board
+    if (!isPlayerNearInstructionBoard()) {
+        instructionBoard.showInstructions = false;
+    }
+
+    instructionBoard.showInstructions = isPlayerNearInstructionBoard();
 }
 
 //==============================================================================
@@ -177,6 +212,35 @@ function interactWithNPC() {
         translationNPC.correctAnswer = translationNPC.dialogues[randomIndex].answer;
         translationNPC.showDialogue = true;
         showTranslationUI();
+    }
+}
+
+// Function to check if the player is near the Instruction Board
+function isPlayerNearInstructionBoard() {
+    let distance = Math.sqrt(
+        (player.x - instructionBoard.x) ** 2 + (player.y - instructionBoard.y) ** 2
+    );
+    return distance < 80; // Interaction range
+}
+
+// Function to handle Instruction Board interaction
+function interactWithInstructionBoard() {
+    if (isPlayerNearInstructionBoard()) {
+        instructionBoard.showInstructions = !instructionBoard.showInstructions;
+    }
+}
+
+// Function to draw instructions when interacting with the board
+function drawInstructions() {
+    if (instructionBoard.showInstructions) {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.fillRect(30, 50, 440, 100);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "16px Arial";
+        instructionBoard.instructions.forEach((line, index) => {
+            ctx.fillText(line, 40, 70 + index * 20);
+        });
     }
 }
 
@@ -225,9 +289,11 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
     drawNPC();
+    drawInstructionBoard();
     drawPlayer();
     updatePlayer();
     drawDialogue();
+    drawInstructions();
     requestAnimationFrame(gameLoop);
 }
 
