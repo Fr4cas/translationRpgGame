@@ -5,17 +5,39 @@ const ctx = canvas.getContext("2d");
 canvas.width = 500;
 canvas.height = 500;
 
+// Loading in sprites for game
+const playerSprites = {
+    down: new Image(),
+    left: new Image(),
+    right: new Image(),
+    up: new Image()
+};
+
+playerSprites.down.src = "assets/player_down.png";
+playerSprites.left.src = "assets/player_left.png";
+playerSprites.right.src = "assets/player_right.png";
+playerSprites.up.src = "assets/player_up.png";
+
+// Npc sprits
+const npcSprite = new Image();
+npcSprite.src = "assets/npc_sprite.png";
+
 //==============================================================================
 /*  Declaration of Objects */
 
 // Player Character
 const player = {
-    x: 180, // Starting position (on the path)
+    x: 180, // Starting position
     y: 300,
-    width: 40,
-    height: 30,
+    width: 30,
+    height: 50,
     color: "#f2dc9d",
-    speed: 3
+    speed: 3,
+    direction: "down",   // default facing direction
+    frameX: 0,
+    maxFrame: 3,
+    frameDelay: 0,
+    frameDelayMax: 8
 };
 
 // Player Movement
@@ -26,7 +48,7 @@ const keys = {
     down: false
 };
 
-// Translation NPC (Has Challenges)
+// Translation NPC (Has the translation challenges)
 const translationNPC = {
     x: 200,
     y: 150,
@@ -34,16 +56,16 @@ const translationNPC = {
     height: 40,
     color: "blue",
     dialogues: [
-        { npc: "Hola, ¿cómo estás?", answer: "Hello, how are you?" },
-        { npc: "Merci beaucoup", answer: "Thank you very much" },
-        { npc: "Guten Morgen", answer: "Good morning" },
-        { npc: "ありがとう", answer: "Thank you" }
+        {npc: "こんにちは", answer: "Hello"},
+        {npc: "はじめまして", answer: "Nice to meet you"},
+        { npc: "ありがとう", answer: "Thank you"}
     ],
     currentDialogue: "",
     correctAnswer: "",
     showDialogue: false
 };
 
+// Just a quick board that gives players information
 const instructionBoard = {
     x: 20,
     y: 300,
@@ -60,7 +82,6 @@ const instructionBoard = {
 };
 
 //==============================================================================
-/*  Variables declarations */
 
 // Track active NPC (which NPC the player is talking to)
 let activeNPC = null;
@@ -84,39 +105,23 @@ function drawBackground() {
 
 // Function to draw the player character
 function drawPlayer() {
-    // Body
-    ctx.fillStyle = player.color;
-    ctx.fillRect(player.x - 5, player.y, player.width + 10, player.height);
+    const spriteWidth = 16;  // frame width
+    const spriteHeight = 25; // frame height
 
-    // Head
-    ctx.fillStyle = player.color;
-    ctx.fillRect(player.x, player.y - 20, player.width, player.height);
+    const spriteImage = playerSprites[player.direction];
 
-    // Clothes
-    ctx.fillStyle = "#23B8A6";
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-
-    // Hair
-    ctx.fillStyle = "#000";
-    ctx.fillRect(player.x, player.y - 25, player.width, 5);
-
-    // Eyes
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(player.x + 13, player.y - 12, 3, 0, Math.PI * 2);
-    ctx.arc(player.x + 27, player.y - 12, 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Legs
-    ctx.fillStyle = player.color;
-    ctx.fillRect(player.x, player.y + 30, 10, 10);
-    ctx.fillRect(player.x + 28, player.y + 30, 10, 10);
+    ctx.drawImage(
+        spriteImage,
+        player.frameX * spriteWidth, 0,
+        spriteWidth, spriteHeight,
+        player.x, player.y,
+        player.width, player.height
+    );
 }
 
 // Function to draw NPC
 function drawNPC() {
-    ctx.fillStyle = translationNPC.color;
-    ctx.fillRect(translationNPC.x, translationNPC.y, translationNPC.width, translationNPC.height);
+    ctx.drawImage(npcSprite, translationNPC.x, translationNPC.y, translationNPC.width, translationNPC.height);
 }
 
 // Function to draw the Instruction Board
@@ -166,17 +171,41 @@ window.addEventListener("keyup", (event) => {
 function updatePlayer() {
     if (isTyping) return;
 
+    let isMoving = false;
+
     if (keys.left && player.x > 0) {
         player.x -= player.speed;
+        player.direction = "left";
+        isMoving = true;
     }
     if (keys.right && player.x + player.width < canvas.width) {
         player.x += player.speed;
+        player.direction = "right";
+        isMoving = true;
     }
     if (keys.up && player.y > 0) {
         player.y -= player.speed;
+        player.direction = "up";
+        isMoving = true;
     }
     if (keys.down && player.y + player.height < canvas.height) {
         player.y += player.speed;
+        player.direction = "down";
+        isMoving = true;
+    }
+
+    // Animate only when moving
+    if (isMoving) {
+        player.frameDelay++;
+        if (player.frameDelay >= player.frameDelayMax) {
+            player.frameDelay = 0;
+            player.frameX++;
+            if (player.frameX > player.maxFrame) {
+                player.frameX = 0;
+            }
+        }
+    } else {
+        player.frameX = 0; // idle frame
     }
 
     // Hides dialogue when player moves away
@@ -201,7 +230,7 @@ function isPlayerNearNPC() {
     let distance = Math.sqrt(
         (player.x - translationNPC.x) ** 2 + (player.y - translationNPC.y) ** 2
     );
-    return distance < 40; // Interaction range
+    return distance < 20; // Interaction range
 }
 
 // Function to handle NPC interaction
@@ -254,7 +283,6 @@ function drawDialogue() {
         ctx.fillStyle = "#ffffff";
         ctx.font = "16px Arial";
         ctx.fillText("NPC says: " + translationNPC.currentDialogue, 70, 370);
-        ctx.fillText("Translate:", 70, 390);
     }
 }
 

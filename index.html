@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RPG Language Game</title>
     <link rel="stylesheet" href="style.css">
+    <img id="npcSprite" src="assets/npc_sprite.png" style="display: none;" />
 </head>
 <body>
-    <h1>🌍 RPG Language Learning Game</h1>
+    <h1>RPG Language Learning Game</h1>
     
     <!-- Game Area -->
     <canvas id="gameCanvas"></canvas>
@@ -20,9 +21,6 @@
     <!-- Translation Input -->
     <input type="text" id="translationInput" placeholder="Enter translation here..." style="display: none;">
     <button id="checkTranslation" style="display: none;" onclick="checkTranslation()">Check Answer</button>
-
-    <!-- Score Tracker -->
-    <p>Score: <span id="score">0</span></p>
 
     <script src="script.js"></script>
 </body>
