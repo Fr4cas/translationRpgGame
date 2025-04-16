@@ -1,3 +1,5 @@
+//==============================================================================
+/*  Globals */
 
 // Set up for the game canvas
 const canvas = document.getElementById("gameCanvas");
@@ -5,7 +7,7 @@ const ctx = canvas.getContext("2d");
 canvas.width = 750;
 canvas.height = 600;
 
-// making the world bigger to fit more npcs
+// World size
 const world = {
     width: 1500,
     height: 1500
@@ -18,6 +20,10 @@ let camera = {
     width: canvas.width,
     height: canvas.height
 };
+
+// translation challenges
+let currentInput = ""; // what the player is typing
+let cursorVisible = true;
 
 // Loading in sprites for game
 const playerSprites = {
@@ -181,26 +187,25 @@ function drawInstructionBoard() {
 
 //==============================================================================
 
-// Detect when player starts typing to disable movement
-document.getElementById("translationInput").addEventListener("focus", () => {
-    isTyping = true;
-});
-
-// Detect when typing finishes to re-enable movement
-document.getElementById("translationInput").addEventListener("blur", () => {
-    isTyping = false;
-});
-
-// Detect when player is pressing movement keys
+// Detect when player is pressing keys
 window.addEventListener("keydown", (event) => {
-    if (isTyping) return; 
+    if (activeNPC && activeNPC.showDialogue) {
+        if (event.key === "Backspace") {
+            event.preventDefault();
+            currentInput = currentInput.slice(0, -1);
+        } else if (event.key === "Enter") {
+            checkCanvasTranslation();
+        } else if (event.key.length === 1) {
+            currentInput += event.key;
+        }
+        return; // prevents movement while inputting
+    }
+
     if (event.key === "a") keys.left = true;
     if (event.key === "d") keys.right = true;
     if (event.key === "w") keys.up = true;
     if (event.key === "s") keys.down = true;
-    if (event.key === "e") {
-        interactWithNPC(); // Press E to talk to NPC
-    }
+    if (event.key === "e") interactWithNPC();
 });
 
 window.addEventListener("keyup", (event) => {
@@ -208,6 +213,20 @@ window.addEventListener("keyup", (event) => {
     if (event.key === "d") keys.right = false;
     if (event.key === "w") keys.up = false;
     if (event.key === "s") keys.down = false;
+});
+
+canvas.addEventListener("click", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    if (
+        activeNPC && activeNPC.showDialogue &&
+        mouseX >= 450 && mouseX <= 530 &&
+        mouseY >= 495 && mouseY <= 520
+    ) {
+        checkCanvasTranslation();
+    }
 });
     //==============================================================================
 
@@ -266,8 +285,8 @@ function updatePlayer() {
         const distance = Math.sqrt((player.x - activeNPC.x) ** 2 + (player.y - activeNPC.y) ** 2);
         if (distance > 25) {
             activeNPC.showDialogue = false;
-            hideTranslationUI();
             activeNPC = null;
+            currentInput = ""; // clears input
         }
     }
 
@@ -306,13 +325,11 @@ function interactWithNPC() {
             nearbyNPC.correctAnswer = dialogue.answer;
             nearbyNPC.showDialogue = true;
             activeNPC = nearbyNPC;
-            showTranslationUI();
         } else {
             nearbyNPC.currentDialogue = "No more questions!";
             nearbyNPC.correctAnswer = "";
             nearbyNPC.showDialogue = true;
             activeNPC = nearbyNPC;
-            hideTranslationUI();
         }
     }
 }
@@ -350,30 +367,38 @@ function drawInstructions() {
 // Function to draw dialogue box with translation challenge
 function drawDialogue() {
     if (activeNPC && activeNPC.showDialogue) {
+        // Dialogue box
         ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-        ctx.fillRect(50, 450, 650, 100);
+        ctx.fillRect(50, 450, 650, 120);
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "16px Arial";
         ctx.fillText("NPC says: " + activeNPC.currentDialogue, 70, 480);
+
+        // Input label
+        ctx.fillText("Your answer:", 70, 510);
+
+        // Input box
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(180, 495, 250, 25);
+        ctx.fillStyle = "#000000";
+        ctx.fillText(currentInput, 190, 512);
+
+        // Input text with blinking cursor
+        const inputWithCursor = cursorVisible ? currentInput + "|" : currentInput;
+        ctx.fillText(inputWithCursor, 190, 512);
+
+        // Check button
+        ctx.fillStyle = "#007BFF";
+        ctx.fillRect(450, 495, 80, 25);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("Check", 470, 512);
     }
 }
 
-// Show translation UI
-function showTranslationUI() {
-    document.getElementById("translationInput").style.display = "block";
-    document.getElementById("checkTranslation").style.display = "block";
-}
-
-// Hide translation UI
-function hideTranslationUI() {
-    document.getElementById("translationInput").style.display = "none";
-    document.getElementById("checkTranslation").style.display = "none";
-}
-
 // Function to check player translation
-function checkTranslation() {
-    let playerInput = document.getElementById("translationInput").value.trim().toLowerCase();
+function checkCanvasTranslation() {
+    let playerInput = currentInput.trim().toLowerCase();
 
     if (activeNPC && playerInput === activeNPC.correctAnswer.toLowerCase()) {
         alert("Correct! You earned 10 points!");
@@ -381,17 +406,20 @@ function checkTranslation() {
         alert(`Wrong! The correct answer was: ${activeNPC?.correctAnswer}`);
     }
 
-    // Advance to the next dialogue
+    // Advance to next dialogue
     if (activeNPC && activeNPC.currentIndex < activeNPC.dialogues.length) {
         activeNPC.currentIndex++;
     }
 
-    document.getElementById("translationInput").value = "";
+    currentInput = "";
     if (activeNPC) activeNPC.showDialogue = false;
-    hideTranslationUI();
     activeNPC = null;
 }
-    //==============================================================================
+//==============================================================================
+
+setInterval(() => {
+    cursorVisible = !cursorVisible;
+}, 500);
 
 // Game Loop
 function gameLoop() {
