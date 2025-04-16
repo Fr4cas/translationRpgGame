@@ -430,15 +430,17 @@ function drawDialogue() {
 function checkCanvasTranslation() {
     let playerInput = currentInput.trim().toLowerCase();
 
-    if (activeNPC && playerInput === activeNPC.correctAnswer.toLowerCase()) {
-        alert("Correct! You earned 10 points!");
-    } else {
-        alert(`Wrong! The correct answer was: ${activeNPC?.correctAnswer}`);
-    }
+    if (activeNPC && activeNPC.correctAnswer !== "") {
+        if (playerInput === activeNPC.correctAnswer.toLowerCase()) {
+            alert("Correct! You earned 10 points!");
+        } else {
+            alert(`Wrong! The correct answer was: ${activeNPC.correctAnswer}`);
+        }
 
-    // Advance to next dialogue
-    if (activeNPC && activeNPC.currentIndex < activeNPC.dialogues.length) {
-        activeNPC.currentIndex++;
+        // Advance to next dialogue only if we're in valid range
+        if (activeNPC.currentIndex < activeNPC.dialogues.length) {
+            activeNPC.currentIndex++;
+        }
     }
 
     currentInput = "";
