@@ -12,7 +12,6 @@ const playerSprites = {
     right: new Image(),
     up: new Image()
 };
-
 playerSprites.down.src = "assets/player_down.png";
 playerSprites.left.src = "assets/player_left.png";
 playerSprites.right.src = "assets/player_right.png";
@@ -49,21 +48,36 @@ const keys = {
 };
 
 // Translation NPC (Has the translation challenges)
-const translationNPC = {
-    x: 200,
-    y: 150,
-    width: 30,
-    height: 40,
-    color: "blue",
-    dialogues: [
-        {npc: "こんにちは", answer: "Hello"},
-        {npc: "はじめまして", answer: "Nice to meet you"},
-        { npc: "ありがとう", answer: "Thank you"}
-    ],
-    currentDialogue: "",
-    correctAnswer: "",
-    showDialogue: false
-};
+const npcs = [
+    {
+        x: 200,
+        y: 150,
+        width: 30,
+        height: 40,
+        dialogues: [
+            { npc: "こんにちは", answer: "Hello" },
+            { npc: "はじめまして", answer: "Nice to meet you" },
+            { npc: "ありがとう", answer: "Thank you" }
+        ],
+        currentDialogue: "",
+        correctAnswer: "",
+        showDialogue: false
+    },
+    {
+        x: 350,
+        y: 100,
+        width: 30,
+        height: 40,
+        dialogues: [
+            { npc: "さようなら", answer: "Goodbye" },
+            { npc: "すみません", answer: "Excuse me" },
+            { npc: "はい", answer: "Yes" }
+        ],
+        currentDialogue: "",
+        correctAnswer: "",
+        showDialogue: false
+    }
+];
 
 // Just a quick board that gives players information
 const instructionBoard = {
@@ -75,7 +89,7 @@ const instructionBoard = {
     text: "INSTRUCTIONS", // Sign title
     instructions: [
         "Use W, A, S, D to move.",
-        "Press E near a blue NPC to translate.",
+        "Press E near a NPC to translate.",
         "Type the correct translation and press Check.",
     ],
     showInstructions: false
@@ -121,7 +135,9 @@ function drawPlayer() {
 
 // Function to draw NPC
 function drawNPC() {
-    ctx.drawImage(npcSprite, translationNPC.x, translationNPC.y, translationNPC.width, translationNPC.height);
+    npcs.forEach(npc => {
+        ctx.drawImage(npcSprite, npc.x, npc.y, npc.width, npc.height);
+    });
 }
 
 // Function to draw the Instruction Board
@@ -147,7 +163,7 @@ document.getElementById("translationInput").addEventListener("blur", () => {
     isTyping = false;
 });
 
-/* Event Listeners */
+// Detect when player is pressing movement keys
 window.addEventListener("keydown", (event) => {
     if (isTyping) return; 
     if (event.key === "a") keys.left = true;
@@ -209,9 +225,13 @@ function updatePlayer() {
     }
 
     // Hides dialogue when player moves away
-    if (!isPlayerNearNPC()) {
-        translationNPC.showDialogue = false;
-        hideTranslationUI();
+    if (activeNPC) {
+        const distance = Math.sqrt((player.x - activeNPC.x) ** 2 + (player.y - activeNPC.y) ** 2);
+        if (distance > 25) {
+            activeNPC.showDialogue = false;
+            hideTranslationUI();
+            activeNPC = null;
+        }
     }
 
     // Hide instructions when player moves away from the board
@@ -225,21 +245,23 @@ function updatePlayer() {
 //==============================================================================
 /*  GAME CONTROL FUNCTIONS */
 
-// Function to check if the player is near the NPC
-function isPlayerNearNPC() {
-    let distance = Math.sqrt(
-        (player.x - translationNPC.x) ** 2 + (player.y - translationNPC.y) ** 2
-    );
-    return distance < 20; // Interaction range
+// Function to find the nearest NPC within range
+function getNearbyNPC() {
+    return npcs.find(npc => {
+        const distance = Math.sqrt((player.x - npc.x) ** 2 + (player.y - npc.y) ** 2);
+        return distance < 25; // interaction distance
+    });
 }
 
 // Function to handle NPC interaction
 function interactWithNPC() {
-    if (isPlayerNearNPC()) {
-        let randomIndex = Math.floor(Math.random() * translationNPC.dialogues.length);
-        translationNPC.currentDialogue = translationNPC.dialogues[randomIndex].npc;
-        translationNPC.correctAnswer = translationNPC.dialogues[randomIndex].answer;
-        translationNPC.showDialogue = true;
+    const nearbyNPC = getNearbyNPC();
+    if (nearbyNPC) {
+        let randomIndex = Math.floor(Math.random() * nearbyNPC.dialogues.length);
+        nearbyNPC.currentDialogue = nearbyNPC.dialogues[randomIndex].npc;
+        nearbyNPC.correctAnswer = nearbyNPC.dialogues[randomIndex].answer;
+        nearbyNPC.showDialogue = true;
+        activeNPC = nearbyNPC;
         showTranslationUI();
     }
 }
@@ -276,13 +298,13 @@ function drawInstructions() {
     //==============================================================================
 // Function to draw dialogue box with translation challenge
 function drawDialogue() {
-    if (translationNPC.showDialogue) {
+    if (activeNPC && activeNPC.showDialogue) {
         ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
         ctx.fillRect(50, 350, 400, 100);
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "16px Arial";
-        ctx.fillText("NPC says: " + translationNPC.currentDialogue, 70, 370);
+        ctx.fillText("NPC says: " + activeNPC.currentDialogue, 70, 370);
     }
 }
 
@@ -301,14 +323,15 @@ function hideTranslationUI() {
 // Function to check player's translation
 function checkTranslation() {
     let playerInput = document.getElementById("translationInput").value.trim().toLowerCase();
-    if (playerInput === translationNPC.correctAnswer.toLowerCase()) {
-        alert(" Correct! You earned 10 points!");
+    if (activeNPC && playerInput === activeNPC.correctAnswer.toLowerCase()) {
+        alert("Correct! You earned 10 points!");
     } else {
-        alert(` Wrong! The correct answer was: ${translationNPC.correctAnswer}`);
+        alert(`Wrong! The correct answer was: ${activeNPC?.correctAnswer}`);
     }
     document.getElementById("translationInput").value = "";
-    translationNPC.showDialogue = false; // Hide dialogue after checking
+    if (activeNPC) activeNPC.showDialogue = false;
     hideTranslationUI();
+    activeNPC = null;
 }
     //==============================================================================
 
