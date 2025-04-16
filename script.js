@@ -67,7 +67,7 @@ const keys = {
     down: false
 };
 
-// Translation NPC (Has the translation challenges)
+// Translation NPC
 const npcs = [
     {
         x: 200,
@@ -98,6 +98,36 @@ const npcs = [
         correctAnswer: "",
         showDialogue: false,
         currentIndex: 0
+    },
+    {
+        x: 500,
+        y: 250,
+        width: 30,
+        height: 40,
+        dialogues: [
+            { npc: "すし", answer: "sushi" },
+            { npc: "ごはん", answer: "rice" },
+            { npc: "水", answer: "water" }
+        ],
+        currentDialogue: "",
+        correctAnswer: "",
+        showDialogue: false,
+        currentIndex: 0
+    },
+    {
+        x: 700,
+        y: 400,
+        width: 30,
+        height: 40,
+        dialogues: [
+            { npc: "学生", answer: "student" },
+            { npc: "先生", answer: "teacher" },
+            { npc: "学校", answer: "school" }
+        ],
+        currentDialogue: "",
+        correctAnswer: "",
+        showDialogue: false,
+        currentIndex: 0
     }
 ];
 
@@ -108,18 +138,18 @@ const instructionBoard = {
     width: 100,
     height: 30,
     color: "brown",
-    text: "INSTRUCTIONS", // Sign title
+    text: "INSTRUCTIONS", // Title
     instructions: [
         "Use W, A, S, D to move.",
         "Press E near a NPC to translate.",
-        "Type the correct translation and press Check.",
+        "Type the correct translation and press Enter or Check.",
     ],
     showInstructions: false
 };
 
 //==============================================================================
 
-// Track active NPC (which NPC the player is talking to)
+// Track which NPC player is interacting with
 let activeNPC = null;
 
 // Track if player is typing
@@ -339,7 +369,7 @@ function isPlayerNearInstructionBoard() {
     let distance = Math.sqrt(
         (player.x - instructionBoard.x) ** 2 + (player.y - instructionBoard.y) ** 2
     );
-    return distance < 80; // Change this to change range
+    return distance < 80; // Adjusts the hitbox
 }
 
 // Function to handle Instruction Board interaction
@@ -353,12 +383,12 @@ function interactWithInstructionBoard() {
 function drawInstructions() {
     if (instructionBoard.showInstructions) {
         ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-        ctx.fillRect(30, 50, 440, 100);
+        ctx.fillRect(50, 450, 650, 120);
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "16px Arial";
         instructionBoard.instructions.forEach((line, index) => {
-            ctx.fillText(line, 40, 70 + index * 20);
+            ctx.fillText(line, 70, 500 + index * 20);
         });
     }
 }
