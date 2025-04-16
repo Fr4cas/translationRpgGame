@@ -2,8 +2,8 @@
 // Set up for the game canvas
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 500;
-canvas.height = 500;
+canvas.width = 1000;
+canvas.height = 1000;
 
 // Loading in sprites for game
 const playerSprites = {
@@ -61,7 +61,8 @@ const npcs = [
         ],
         currentDialogue: "",
         correctAnswer: "",
-        showDialogue: false
+        showDialogue: false,
+        currentIndex: 0
     },
     {
         x: 350,
@@ -75,7 +76,8 @@ const npcs = [
         ],
         currentDialogue: "",
         correctAnswer: "",
-        showDialogue: false
+        showDialogue: false,
+        currentIndex: 0
     }
 ];
 
@@ -257,12 +259,22 @@ function getNearbyNPC() {
 function interactWithNPC() {
     const nearbyNPC = getNearbyNPC();
     if (nearbyNPC) {
-        let randomIndex = Math.floor(Math.random() * nearbyNPC.dialogues.length);
-        nearbyNPC.currentDialogue = nearbyNPC.dialogues[randomIndex].npc;
-        nearbyNPC.correctAnswer = nearbyNPC.dialogues[randomIndex].answer;
-        nearbyNPC.showDialogue = true;
-        activeNPC = nearbyNPC;
-        showTranslationUI();
+        const i = nearbyNPC.currentIndex;
+
+        if (i < nearbyNPC.dialogues.length) {
+            const dialogue = nearbyNPC.dialogues[i];
+            nearbyNPC.currentDialogue = dialogue.npc;
+            nearbyNPC.correctAnswer = dialogue.answer;
+            nearbyNPC.showDialogue = true;
+            activeNPC = nearbyNPC;
+            showTranslationUI();
+        } else {
+            nearbyNPC.currentDialogue = "No more questions!";
+            nearbyNPC.correctAnswer = "";
+            nearbyNPC.showDialogue = true;
+            activeNPC = nearbyNPC;
+            hideTranslationUI();
+        }
     }
 }
 
@@ -271,7 +283,7 @@ function isPlayerNearInstructionBoard() {
     let distance = Math.sqrt(
         (player.x - instructionBoard.x) ** 2 + (player.y - instructionBoard.y) ** 2
     );
-    return distance < 80; // Interaction range
+    return distance < 80; // Change this to change range
 }
 
 // Function to handle Instruction Board interaction
@@ -308,7 +320,7 @@ function drawDialogue() {
     }
 }
 
-// Show translation UI (input box & button)
+// Show translation UI
 function showTranslationUI() {
     document.getElementById("translationInput").style.display = "block";
     document.getElementById("checkTranslation").style.display = "block";
@@ -320,14 +332,21 @@ function hideTranslationUI() {
     document.getElementById("checkTranslation").style.display = "none";
 }
 
-// Function to check player's translation
+// Function to check player translation
 function checkTranslation() {
     let playerInput = document.getElementById("translationInput").value.trim().toLowerCase();
+
     if (activeNPC && playerInput === activeNPC.correctAnswer.toLowerCase()) {
         alert("Correct! You earned 10 points!");
     } else {
         alert(`Wrong! The correct answer was: ${activeNPC?.correctAnswer}`);
     }
+
+    // Advance to the next dialogue
+    if (activeNPC && activeNPC.currentIndex < activeNPC.dialogues.length) {
+        activeNPC.currentIndex++;
+    }
+
     document.getElementById("translationInput").value = "";
     if (activeNPC) activeNPC.showDialogue = false;
     hideTranslationUI();
