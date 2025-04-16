@@ -2,8 +2,22 @@
 // Set up for the game canvas
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 1000;
-canvas.height = 1000;
+canvas.width = 750;
+canvas.height = 600;
+
+// making the world bigger to fit more npcs
+const world = {
+    width: 1500,
+    height: 1500
+};
+
+// Use of a camera to allow players to explore the map
+let camera = {
+    x: 0,
+    y: 0,
+    width: canvas.width,
+    height: canvas.height
+};
 
 // Loading in sprites for game
 const playerSprites = {
@@ -116,7 +130,7 @@ function drawBackground() {
 
     // Draw dirt path
     ctx.fillStyle = "#8B4513"; // Brown
-    ctx.fillRect(150, 0, 100, canvas.height);
+    ctx.fillRect(150 - camera.x, 0 - camera.y, 100, world.height);
 }
 
 // Function to draw the player character
@@ -130,7 +144,7 @@ function drawPlayer() {
         spriteImage,
         player.frameX * spriteWidth, 0,
         spriteWidth, spriteHeight,
-        player.x, player.y,
+        player.x - camera.x, player.y - camera.y,
         player.width, player.height
     );
 }
@@ -138,19 +152,31 @@ function drawPlayer() {
 // Function to draw NPC
 function drawNPC() {
     npcs.forEach(npc => {
-        ctx.drawImage(npcSprite, npc.x, npc.y, npc.width, npc.height);
+        ctx.drawImage(
+            npcSprite,
+            npc.x - camera.x, npc.y - camera.y,
+            npc.width, npc.height
+        );
     });
 }
 
 // Function to draw the Instruction Board
 function drawInstructionBoard() {
     ctx.fillStyle = instructionBoard.color;
-    ctx.fillRect(instructionBoard.x, instructionBoard.y, instructionBoard.width, instructionBoard.height);
+    ctx.fillRect(
+        instructionBoard.x - camera.x,
+        instructionBoard.y - camera.y,
+        instructionBoard.width,
+        instructionBoard.height
+    );
 
-    // Draw text on the board
     ctx.fillStyle = "#fff";
     ctx.font = "12px Arial";
-    ctx.fillText(instructionBoard.text, instructionBoard.x + 5, instructionBoard.y + 20);
+    ctx.fillText(
+        instructionBoard.text,
+        instructionBoard.x - camera.x + 5,
+        instructionBoard.y - camera.y + 20
+    );
 }
 
 //==============================================================================
@@ -196,7 +222,7 @@ function updatePlayer() {
         player.direction = "left";
         isMoving = true;
     }
-    if (keys.right && player.x + player.width < canvas.width) {
+    if (keys.right && player.x + player.width < world.width) {
         player.x += player.speed;
         player.direction = "right";
         isMoving = true;
@@ -206,7 +232,7 @@ function updatePlayer() {
         player.direction = "up";
         isMoving = true;
     }
-    if (keys.down && player.y + player.height < canvas.height) {
+    if (keys.down && player.y + player.height < world.height) {
         player.y += player.speed;
         player.direction = "down";
         isMoving = true;
@@ -226,6 +252,15 @@ function updatePlayer() {
         player.frameX = 0; // idle frame
     }
 
+    // Camera code
+    camera.x = player.x + player.width / 2 - canvas.width / 2;
+    camera.y = player.y + player.height / 2 - canvas.height / 2;
+
+    // Fix camera to map bounds
+    camera.x = Math.max(0, Math.min(world.width - canvas.width, camera.x));
+    camera.y = Math.max(0, Math.min(world.height - canvas.height, camera.y));
+
+
     // Hides dialogue when player moves away
     if (activeNPC) {
         const distance = Math.sqrt((player.x - activeNPC.x) ** 2 + (player.y - activeNPC.y) ** 2);
@@ -242,6 +277,10 @@ function updatePlayer() {
     }
 
     instructionBoard.showInstructions = isPlayerNearInstructionBoard();
+
+    // keeps player in bounds
+    player.x = Math.max(0, Math.min(world.width - player.width, player.x));
+    player.y = Math.max(0, Math.min(world.height - player.height, player.y));
 }
 
 //==============================================================================
@@ -312,11 +351,11 @@ function drawInstructions() {
 function drawDialogue() {
     if (activeNPC && activeNPC.showDialogue) {
         ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-        ctx.fillRect(50, 350, 400, 100);
+        ctx.fillRect(50, 450, 650, 100);
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "16px Arial";
-        ctx.fillText("NPC says: " + activeNPC.currentDialogue, 70, 370);
+        ctx.fillText("NPC says: " + activeNPC.currentDialogue, 70, 480);
     }
 }
 
