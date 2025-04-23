@@ -133,18 +133,14 @@ const npcs = [
 
 // Just a quick board that gives players information
 const instructionBoard = {
-    x: 20,
-    y: 300,
-    width: 100,
-    height: 30,
-    color: "brown",
-    text: "INSTRUCTIONS", // Title
+    x: player.x,
+    y: player.y - 60,
     instructions: [
         "Use W, A, S, D to move.",
         "Press E near a NPC to translate.",
         "Type the correct translation and press Enter or Check.",
     ],
-    showInstructions: false
+    showInstructions: true
 };
 
 //==============================================================================
@@ -198,21 +194,22 @@ function drawNPC() {
 
 // Function to draw the Instruction Board
 function drawInstructionBoard() {
-    ctx.fillStyle = instructionBoard.color;
-    ctx.fillRect(
-        instructionBoard.x - camera.x,
-        instructionBoard.y - camera.y,
-        instructionBoard.width,
-        instructionBoard.height
-    );
+    if (instructionBoard.showInstructions) {
+        // Optional: background behind instructions
+        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.fillRect(player.x - camera.x - 20, player.y - camera.y - 90, 350, 80);
 
-    ctx.fillStyle = "#fff";
-    ctx.font = "12px Arial";
-    ctx.fillText(
-        instructionBoard.text,
-        instructionBoard.x - camera.x + 5,
-        instructionBoard.y - camera.y + 20
-    );
+        // Draw instruction text
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "14px Arial";
+        instructionBoard.instructions.forEach((line, index) => {
+            ctx.fillText(
+                line,
+                player.x - camera.x,
+                player.y - camera.y - 70 + index * 18
+            );
+        });
+    }
 }
 
 //==============================================================================
@@ -468,3 +465,8 @@ function gameLoop() {
 
 // Start game
 gameLoop();
+
+// Auto-hide instructions after 5 seconds
+setTimeout(() => {
+    instructionBoard.showInstructions = false;
+}, 5000);
